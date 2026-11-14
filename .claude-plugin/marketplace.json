@@ -1,0 +1,5 @@
+{
+  "name": "mood-engine-claude",
+  "owner": { "name": "paraversal" },
+  "plugins": [{ "name": "mood-engine", "source": "./" }]
+}

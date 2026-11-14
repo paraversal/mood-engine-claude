@@ -1,0 +1,9 @@
+{
+  "name": "mood-engine",
+  "version": "0.1.0",
+  "description": "Paints Claude Desktop with the active mood-engine theme and follows theme switches",
+  "author": { "name": "paraversal", "url": "https://github.com/paraversal" },
+  "homepage": "https://github.com/paraversal/mood-engine-claude",
+  "repository": "https://github.com/paraversal/mood-engine-claude",
+  "license": "GPL-3.0-only"
+}
