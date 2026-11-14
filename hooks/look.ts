@@ -68,43 +68,50 @@ function anchorLadder(theme: Theme, mode: 'dark' | 'light'): Anchors[] {
   const r = theme.roles
   const bg = r.bg ?? theme.palette.base00 ?? '#000000'
   const fg = r.fg ?? theme.palette.base05 ?? '#ffffff'
-  // Desktop wants surfaces to get lighter from surface-0 on, in both modes. A
-  // dark theme's bg/surface/surface-raised are sorted darkest first (Catppuccin
-  // keeps its base01 below base00); surface-3 repeats surface-2 so muted text
-  // keeps its contrast on menus. A light theme's surfaces get darker, so there
-  // only the page is given and the rest is derived.
-  const sorted = [bg, r.surface, r['surface-raised']]
-    .filter((v): v is string => v !== undefined)
-    .sort((a, b) => luminance(a) - luminance(b))
-  const page = mode === 'dark' ? sorted[0]! : bg
+  // Desktop paints the conversation with surface-1 and the composer, panels
+  // and menus with surface-2/3; surface-0 is the window behind them (the
+  // sidebar is a mix of the two). So the theme's bg is surface-1, and
+  // surface-0 is whatever the theme has at or below it. Desktop wants each
+  // surface as light as or lighter than the one before, in both modes.
+  const lum = (c: string) => luminance(c)
+  const themed = [r['bg-inset'], r.surface, r['surface-raised']].filter(
+    (v): v is string => v !== undefined,
+  )
+  const below = themed.filter(c => lum(c) <= lum(bg)).sort((a, b) => lum(a) - lum(b))
+  const above = themed.filter(c => lum(c) > lum(bg)).sort((a, b) => lum(a) - lum(b))
+  // Dark: base00 → base01 → base02 go up from bg (Catppuccin keeps base01 below
+  // base00, so it is sorted out). Light: base01/base02 are darker than the page,
+  // so only the one closest to bg sits under it, and cards stay at bg.
+  const under = mode === 'dark' ? (below[0] ?? bg) : (below[below.length - 1] ?? bg)
+  const raised = mode === 'dark' ? above : []
+  const r2 = raised[0] ?? bg
+  const r3 = raised[1] ?? r2
   // Each step keeps fewer of the theme's own raised surfaces: a light base02
   // leaves Desktop's highlight and status colours too little room.
-  const surfaceSteps =
-    mode === 'dark'
-      ? [
-          { 'surface-1': sorted[1], 'surface-2': sorted[2], 'surface-3': sorted[2] },
-          { 'surface-1': sorted[1] },
-          {},
-          // Last resort: flat surfaces, all at the page colour.
-          { 'surface-1': page, 'surface-2': page, 'surface-3': page },
-        ]
-      : [{}, {}, {}, {}]
+  const surfaceSteps: Record<string, string>[] = [
+    { 'surface-0': under, 'surface-1': bg, 'surface-2': r2, 'surface-3': r3 },
+    { 'surface-0': under, 'surface-1': bg, 'surface-2': r2, 'surface-3': r2 },
+    { 'surface-0': under, 'surface-1': bg, 'surface-2': bg, 'surface-3': bg },
+    // Last resort: flat surfaces, all at the page colour.
+    { 'surface-0': bg, 'surface-1': bg, 'surface-2': bg, 'surface-3': bg },
+  ]
+  const page = bg
   // The last step also lifts dim body text (Solarized's base05) toward white or
   // black. Not base07: in some light themes (Catppuccin Latte) it is a pastel.
   const last = LADDER.length - 1
   const strong = mode === 'dark' ? '#ffffff' : '#000000'
 
   return LADDER.map((step, i) => {
-    const surfaces: Record<string, string | undefined> = surfaceSteps[i] ?? {}
+    const surfaces = surfaceSteps[i]!
     // Text is measured against every surface it sits on.
-    const under = [page, ...Object.values(surfaces)].filter((v): v is string => v !== undefined)
+    const all = Object.values(surfaces)
     const against = (ratio: number, color: string | undefined) =>
-      under.reduce((c, s) => atLeast(c, s, fg, ratio), color ?? fg)
+      all.reduce((c, s) => atLeast(c, s, fg, ratio), color ?? fg)
 
     return clean({
-      'surface-0': page,
-      'text-primary': i === last ? atLeast(fg, page, strong, 9) : fg,
       ...surfaces,
+      'surface-0': surfaces['surface-0']!,
+      'text-primary': i === last ? atLeast(fg, page, strong, 9) : fg,
       'text-secondary': against(step.secondary, r['fg-muted']),
       'text-muted': against(step.muted, r['fg-subtle']),
     })

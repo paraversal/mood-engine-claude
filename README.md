@@ -17,8 +17,9 @@ re-applies the look. Symlinked files from a dotfiles repo are followed.
 
 | Theme index role | Claude look |
 |---|---|
-| `bg` / `surface` / `surface-raised` (dark, sorted darkest first) | `surface-0` … `surface-3` |
-| `bg` (light) | `surface-0`, the rest derived |
+| `bg` | `surface-1`: the conversation pane |
+| `bg-inset` / `surface` / `surface-raised` at or below `bg` | `surface-0`: the window behind it |
+| `surface` / `surface-raised` above `bg` (dark themes) | `surface-2` / `surface-3`: composer, panels, menus |
 | `fg` | `text-primary` |
 | `fg-muted` / `fg-subtle` | `text-secondary` / `text-muted`, lifted toward `fg` until they reach 7:1 and 4.5:1 |
 | `accent`, `error`, `success`, `warning` | `accent`, `danger`, `success`, `warning` |
